@@ -28,17 +28,13 @@ import com.example.composesampleapp.ui.component.MinusButton
 import com.example.composesampleapp.ui.component.PlusButton
 import com.example.composesampleapp.viwemodel.MainViewModel
 
-private const val TAG : String = "MainScreen"
+private const val TAG: String = "MainScreen"
 
 @Composable
 fun MainScreen(
-    modifier: Modifier = Modifier,
-    vm: MainViewModel
+    modifier: Modifier = Modifier, vm: MainViewModel
 ) {
-    Scaffold(
-        modifier = modifier,
-        topBar = { TopAppBar() }
-    ) { padding ->
+    Scaffold(modifier = modifier, topBar = { TopAppBar() }) { padding ->
         BaseView(
             Modifier
                 .padding(padding)
@@ -64,7 +60,7 @@ private fun BaseView(modifier: Modifier = Modifier) {
     var countRememberD = remember { 0 }
     //UIに追従するような変数にしたい場合はState<T>型で宣言してby remember{State<T>}のようにしてComposable関数に認識させないといけない
     var countRemember by remember { mutableIntStateOf(0) }
-    
+
 
     Column(
         modifier = modifier
@@ -82,15 +78,16 @@ private fun BaseView(modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             PlusButton { countRemember++ }
-            MinusButton{ countRemember-- }
+            MinusButton { countRemember-- }
         }
 
     }
 }
 
 @Composable
-fun TextLabel(modifier: Modifier = Modifier,
-              count: Int) {
+fun TextLabel(
+    modifier: Modifier = Modifier, count: Int
+) {
 
     //↓Composeされると発火するLambda関数
     SideEffect { Log.d("$TAG: TextLabel", "composed / Recomposed") }
@@ -99,7 +96,7 @@ fun TextLabel(modifier: Modifier = Modifier,
         text = count.toString(),
         modifier = modifier
             .background(color = ColorLightGreen)
-            .padding(8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         fontSize = 52.sp,
         fontWeight = FontWeight.Bold,
         fontStyle = FontStyle.Italic
