@@ -3,6 +3,7 @@ plugins {
 	alias(libs.plugins.kotlin.android)
 	alias(libs.plugins.hilt.android)
 	alias(libs.plugins.ksp.android)
+	kotlin("plugin.serialization") version "1.9.20"
 }
 
 android {
@@ -20,7 +21,13 @@ android {
 	}
 	
 	buildTypes {
+		debug {
+			buildConfigField("String", "BASE_URL", "${property("debug.api_url_base")}")
+		}
+
 		release {
+			buildConfigField("String", "BASE_URL", "${property("release.api_url_base")}")
+
 			isMinifyEnabled = false
 			proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
 		}
@@ -69,10 +76,24 @@ dependencies {
 	implementation(libs.androidx.activity.compose)
 	implementation(composeBom)
 	implementation(libs.bundles.compose)
+	implementation(libs.lifecycle.viewmodel.compose)
 	//ViewModelを使う予定なので入れておく
 	implementation(libs.androidx.lifecycle.viewmodel.compose)
-	
-	
+
+	//http connection
+	implementation(platform(libs.okhttp.bom))
+	implementation(libs.okhttp)
+	implementation(libs.okhttp.interceptor)
+	implementation(libs.retrofit2)
+
+	//Kotlin Serialization
+	implementation(libs.kotlinx.serialization.json)
+	implementation(libs.retrofit2.kotlinx.serialization.converter)
+
+	//coil
+	implementation(libs.coil)
+	implementation(libs.coil.svg)
+
 	testImplementation(libs.junit)
 	testImplementation(composeBom)
 	androidTestImplementation(composeBom)
