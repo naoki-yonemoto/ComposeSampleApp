@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,12 +17,17 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -100,6 +106,12 @@ private fun MainScreenOfState(
         }
     }
 
+    val onPullRefreshAction: () -> Unit = {
+        scope.launch {
+            vm.getWeatherInformation(vm.weatherPoint)
+        }
+    }
+
     when (uiState) {
         is UiState.Loading -> {
             LoadingScreen()
@@ -109,7 +121,8 @@ private fun MainScreenOfState(
             WeatherMainInfoScreen(
                 modifier = modifier,
                 response = uiState as UiState.Complete,
-                onClickLocaleMenuSelect = onClickLocaleMenuSelect
+                onClickLocaleMenuSelect = onClickLocaleMenuSelect,
+                onPullRefresh = onPullRefreshAction
             )
         }
 
@@ -121,40 +134,68 @@ private fun MainScreenOfState(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun WeatherMainInfoScreen(
     modifier: Modifier = Modifier,
     response: UiState.Complete,
-    onClickLocaleMenuSelect: (CityCode) -> Unit
+    onClickLocaleMenuSelect: (CityCode) -> Unit,
+    onPullRefresh: () -> Unit,
 ) {
     val data = remember { response.data }
 
-    LazyColumn(
+    //更新の状態を保存
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    // PullRefreshState を作成 -> PullRefreshの動作の設定＆状態の保存
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            onPullRefresh.invoke()
+        }
+    )
+    Box(
         modifier = modifier
-            .safeDrawingPadding()
-            .background(Color.White)
-            .padding(16.dp)
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .fillMaxSize()
+            .pullRefresh(pullRefreshState)
     ) {
-        //同じ方向にScrollするColumnにLazyColumnを入れることはできない
-        item { DateHeaderText(date = data.publicTimeFormatted) }
-        item { BlackLineBorder() }
-        item {
-            LocaleSelectHeader(
-                title = data.title,
-                onClickLocaleMenuSelect = onClickLocaleMenuSelect
-            )
-        }
-        item { StandardText(text = data.description.descriptionBodyText) }
 
-        val list = data.forecasts
-        items(list.size) { index ->
-            WeatherForecastsInfoContent(list[index])
+        LazyColumn(
+            modifier = modifier
+                .safeDrawingPadding()
+                .background(Color.White)
+                .padding(16.dp)
+                .pullRefresh(pullRefreshState)
+                .fillMaxSize(),
+            state = rememberLazyListState(),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            //同じ方向にScrollするColumnにLazyColumnを入れることはできない
+            item { DateHeaderText(date = data.publicTimeFormatted) }
+            item { BlackLineBorder() }
+            item {
+                LocaleSelectHeader(
+                    title = data.title,
+                    onClickLocaleMenuSelect = onClickLocaleMenuSelect
+                )
+            }
+            item { StandardText(text = data.description.descriptionBodyText) }
+
+            val list = data.forecasts
+            items(list.size) { index ->
+                WeatherForecastsInfoContent(list[index])
+            }
         }
+
+        // リフレッシュインジケーター（UI上のくるくる）
+        PullRefreshIndicator(
+            refreshing = isRefreshing,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
-
 }
 
 @Composable
@@ -215,7 +256,9 @@ private fun LocaleSelectHeader(
         verticalAlignment = Alignment.Top
     ) {
         Text(
-            modifier = modifier.fillMaxSize().weight(1f),
+            modifier = modifier
+                .fillMaxSize()
+                .weight(1f),
             text = title,
             fontSize = 16.sp
         )
@@ -444,7 +487,10 @@ fun PreviewMainScreen() {
     val result = Json.decodeFromString<WeatherResponse>(sampleData)
 
 
-    WeatherMainInfoScreen(response = UiState.Complete(result), onClickLocaleMenuSelect = {})
+    WeatherMainInfoScreen(
+        response = UiState.Complete(result),
+        onClickLocaleMenuSelect = {},
+        onPullRefresh = {})
 }
 
 

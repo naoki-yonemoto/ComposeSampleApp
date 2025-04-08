@@ -22,7 +22,7 @@ class MainViewModel
     private var _uiState: MutableStateFlow<UiState> = MutableStateFlow(UiState.Init)
     val uiState = _uiState.asStateFlow()
 
-    private var weatherPoint: CityCode = CityCode.Tokyo
+    var weatherPoint: CityCode = CityCode.Tokyo
 
     //天気情報の取得 & ローディング中の状態の管理
     suspend fun getWeatherInformation(cityCode: CityCode) {
