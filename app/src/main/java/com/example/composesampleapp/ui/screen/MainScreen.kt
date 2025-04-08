@@ -1,4 +1,4 @@
-package com.example.composesampleapp.ui
+package com.example.composesampleapp.ui.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -67,7 +67,7 @@ import com.example.composesampleapp.ui.component.BlackLineBorder
 import com.example.composesampleapp.ui.component.LoadingScreen
 import com.example.composesampleapp.ui.component.StandardColorText
 import com.example.composesampleapp.ui.component.StandardText
-import com.example.composesampleapp.ui.state.UiState
+import com.example.composesampleapp.ui.state.MainScreenUiState
 import com.example.composesampleapp.viwemodel.MainViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -113,24 +113,24 @@ private fun MainScreenOfState(
     }
 
     when (uiState) {
-        is UiState.Loading -> {
+        is MainScreenUiState.Loading -> {
             LoadingScreen()
         }
 
-        is UiState.Complete -> {
+        is MainScreenUiState.Complete -> {
             WeatherMainInfoScreen(
                 modifier = modifier,
-                response = uiState as UiState.Complete,
+                response = uiState as MainScreenUiState.Complete,
                 onClickLocaleMenuSelect = onClickLocaleMenuSelect,
                 onPullRefresh = onPullRefreshAction
             )
         }
 
-        is UiState.Error -> {
+        is MainScreenUiState.Error -> {
             ErrorScreen()
         }
 
-        is UiState.Init -> {}
+        is MainScreenUiState.Init -> {}
     }
 }
 
@@ -138,7 +138,7 @@ private fun MainScreenOfState(
 @Composable
 private fun WeatherMainInfoScreen(
     modifier: Modifier = Modifier,
-    response: UiState.Complete,
+    response: MainScreenUiState.Complete,
     onClickLocaleMenuSelect: (CityCode) -> Unit,
     onPullRefresh: () -> Unit,
 ) {
@@ -488,7 +488,7 @@ fun PreviewMainScreen() {
 
 
     WeatherMainInfoScreen(
-        response = UiState.Complete(result),
+        response = MainScreenUiState.Complete(result),
         onClickLocaleMenuSelect = {},
         onPullRefresh = {})
 }
